@@ -5,6 +5,7 @@ struct FrameParams {
   uint_fast16_t audioPeak;  // range: 0..512
   float audioMean;  // range: 0..1
   float timeMult; // animations are expected to run at 60fps I guess? 1.0==exactly 60fps. 4.0==achieving 15fps, so move 4x faster.
+  float levels[240];
 };
 
 struct Point {

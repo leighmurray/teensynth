@@ -1,3 +1,7 @@
+#ifndef DISPLAY_LIB_H__
+#define DISPLAY_LIB_H__
+
+
 /***************************************************
                  **  DemoSauce!  **
   State-of-the-art graphics for your beautiful TFT display.
@@ -47,6 +51,7 @@ MISO (SDCARD Read)
 #include <Audio.h>
 #include <Wire.h>      // this is needed for FT6206
 #include <Adafruit_FT6206.h>
+#include "SynthLib.h"
 
 #include "FrameParams.h"
 
@@ -59,6 +64,7 @@ MISO (SDCARD Read)
 #include "PlasmaCloud.h"
 #include "PlasmaYellow.h"
 #include "Sphere3D.h"
+#include "Spectrum.h"
 #include "TriangleWeb.h"
 #include "TwistyText.h"
 #include "Waveform.h"
@@ -78,7 +84,7 @@ const uint_fast8_t DEBUG_ANIM_INDEX = 0;
 const boolean DEBUG_TRANSITION = false;  // dev: set to true for short animation durations
 const int_fast8_t DEBUG_TRANSITION_INDEX = -1;  // Supports -1: chooses a transition at random
 
-const int_fast16_t DEFAULT_ANIM_TIME = 20.0f * 1000.0f;  // ms
+const int_fast16_t DEFAULT_ANIM_TIME = 10.0f * 1000.0f;  // ms
 
 // TFT pins
 #define TFT_DC      6
@@ -87,6 +93,7 @@ const int_fast16_t DEFAULT_ANIM_TIME = 20.0f * 1000.0f;  // ms
 #define TFT_MOSI     7
 #define TFT_SCLK    14
 #define TFT_MISO    12
+ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC, TFT_RST, TFT_MOSI, TFT_SCLK, TFT_MISO);
 
 // The FT6206 uses hardware I2C (SCL/SDA) Touchscreen
 Adafruit_FT6206 ctp = Adafruit_FT6206(); // Uses pin SCL 19, SDA 18
@@ -94,7 +101,7 @@ Adafruit_FT6206 ctp = Adafruit_FT6206(); // Uses pin SCL 19, SDA 18
 const uint8_t MIC_PIN = 17;
 
 // Use hardware SPI (#13, #12, #11) and the above for CS/DC
-ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC, TFT_RST, TFT_MOSI, TFT_SCLK, TFT_MISO);
+
 FrameParams frameParams;
 long previousMillis = 0;
 
@@ -108,6 +115,7 @@ Sphere3D * _sphere3D               = new Sphere3D();
 TriangleWeb * _triangleWeb         = new TriangleWeb();
 TwistyText * _twistyText           = new TwistyText();
 Waveform * _waveform               = new Waveform();
+Spectrum * _spectrum               = new Spectrum();
 
 TransitionDither * _transDither  = new TransitionDither();
 TransitionHalftone * _transHalftone  = new TransitionHalftone();
@@ -147,6 +155,7 @@ void displaySetup() {
   pinMode( MIC_PIN, INPUT );
 
   tft.begin();
+  tft.setClock(100000000);
   tft.setRotation( 3 );
   tft.fillScreen(ILI9341_BLACK);
 
@@ -189,11 +198,12 @@ void displaySetup() {
     _waveform,
     _magentaSquares,
     _sphere3D,
-    //_checkerboard,
-    //_leaves,
+    _checkerboard,
+    _leaves,
     _cube3D,
     _plasmaYellow,
     _triangleWeb
+    //_spectrum
   };
   animCount = sizeof( ANIMS_TEMP ) / sizeof( BaseAnimation* );
 
@@ -264,12 +274,14 @@ void displayLoop() {
   long newMillis = millis();
   uint_fast8_t elapsed = newMillis - previousMillis;
   previousMillis = newMillis;
-  frameParams.timeMult = elapsed * (60.0f / 1000);  // 1.0==exactly 60fps. 4.0==15fps, 4x slower
+  frameParams.timeMult = elapsed * (0.06f);  // 1.0==exactly 60fps. 4.0==15fps, 4x slower
 
   // Get some audio input
   const uint_fast8_t SAMPLES_PER_FRAME = 1;
   frameParams.audioPeak = 0;
   uint_fast16_t sum = 0;
+
+  //getFFT(&frameParams.levels[0]);
 
   for( uint_fast8_t s=0; s<SAMPLES_PER_FRAME; s++ ) {
     uint_fast16_t sample = abs( analogRead( MIC_PIN ) - 511 );
@@ -373,5 +385,6 @@ void displayLoop() {
 
     }
   }
-
 }
+
+#endif

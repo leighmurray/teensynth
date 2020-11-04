@@ -1,3 +1,6 @@
+#ifndef SYNTH_LIB_H__
+#define SYNTH_LIB_H__
+
 // Teensy-Synth Part 10
 // Hardware Controls
 // By Notes and Volts
@@ -12,7 +15,6 @@
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
-//#include <SD.h>
 #include <SerialFlash.h>
 
 
@@ -37,20 +39,24 @@
 
 
 // GUItool: begin automatically generated code
-AudioSynthWaveform       waveform2;      //xy=382,453
-AudioSynthWaveform       waveform1;      //xy=386,394
-AudioSynthNoisePink      pink1;          //xy=394,504
-AudioMixer4              mixer1;         //xy=577,454
-AudioFilterStateVariable filter1;        //xy=725,457
-AudioEffectEnvelope      envelope1;      //xy=888,458
-AudioOutputI2S           i2s1;           //xy=1049,465
+AudioSynthWaveform       waveform2;      //xy=222,454
+AudioSynthWaveform       waveform1;      //xy=226,395
+AudioSynthNoisePink      pink1;          //xy=234,505
+AudioMixer4              mixer1;         //xy=417,455
+AudioFilterStateVariable filter1;        //xy=565,458
+AudioEffectEnvelope      envelope1;      //xy=728,459
+AudioAmplifier           amp1;           //xy=920,454
+AudioAnalyzeFFT1024      fft1024;        //xy=1095,502
+AudioOutputI2S           i2s1;           //xy=1102,413
 AudioConnection          patchCord1(waveform2, 0, mixer1, 1);
 AudioConnection          patchCord2(waveform1, 0, mixer1, 0);
 AudioConnection          patchCord3(pink1, 0, mixer1, 2);
 AudioConnection          patchCord4(mixer1, 0, filter1, 0);
 AudioConnection          patchCord5(filter1, 0, envelope1, 0);
-AudioConnection          patchCord6(envelope1, 0, i2s1, 0);
-AudioConnection          patchCord7(envelope1, 0, i2s1, 1);
+AudioConnection          patchCord6(envelope1, amp1);
+AudioConnection          patchCord7(amp1, 0, i2s1, 0);
+AudioConnection          patchCord8(amp1, 0, i2s1, 1);
+AudioConnection          patchCord9(amp1, fft1024);
 // GUItool: end automatically generated code
 
 
@@ -110,15 +116,18 @@ void synthSetup() {
 
   pink1.amplitude(1.0);
 
-  mixer1.gain(0, 0.1);
-  mixer1.gain(1, 0.1);
+  mixer1.gain(0, 1.0);
+  mixer1.gain(1, 1.0);
   mixer1.gain(2, 0.0);
 
-  envelope1.attack(0);
+  envelope1.attack(1);
   envelope1.decay(0);
   envelope1.sustain(1);
   envelope1.release(500);
-  oscStop();
+  
+  amp1.gain(1.0);
+  
+
 }
 
 
@@ -479,3 +488,17 @@ void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom) {
     }
   }
 }
+
+void getFFT(float *levels) {
+  if (fft1024.available()) {
+    for (int i=0; i < 240; i++) {
+      levels[i] = fft1024.output[i];
+    }    
+  } else {
+    //for (var i=0; i < 240; i++) {
+    //  levels[i] = 0;
+    //}
+  }
+}
+
+#endif
