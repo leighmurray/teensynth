@@ -126,10 +126,8 @@ void synthSetup() {
   envelope1.release(500);
   
   amp1.gain(1.0);
-  
 
 }
-
 
 void synthLoop() {
   usbMIDI.read();

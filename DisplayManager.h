@@ -35,8 +35,8 @@ void DisplayManager::Setup(){
   Serial.begin(9600);
   _ts.begin(40);
   _tft.begin();
-  _tft.fillScreen(ILI9341_BLUE);
   _tft.setClock(100000000);
+  _tft.fillScreen(ILI9341_BLUE);
   _tft.setRotation( 3 );
   _tft.drawRect(10, 5, 140, 110, ILI9341_BLACK);
   _tft.drawRect(170, 5, 140, 110, ILI9341_BLACK);
