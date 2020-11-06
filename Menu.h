@@ -20,11 +20,15 @@
 #include <TeensyUserInterface.h>
 #include <font_Arial.h>
 #include <font_ArialBold.h>
+#include "SynthLib.h"
+
 
 void commandGetAnInteger(void);
 void commandGetAFloat(void);
-void commandMakeAChoice(void);
-void commandGetValuesAndSave(void);
+void oscillatorOneChoices(void);
+void oscillatorTwoChoices(void);
+void ampADSRChoices(void);
+void mixerChoices(void);
 void enableSelfDestructCallback(void);
 //
 // create the user interface object
@@ -81,11 +85,11 @@ extern MENU_ITEM mainMenu[];
 // the main menu
 //
 MENU_ITEM mainMenu[] = {
-  {MENU_ITEM_TYPE_MAIN_MENU_HEADER,  "Example Six - Prompt User for Infomation",  MENU_COLUMNS_2,              mainMenu},
-  {MENU_ITEM_TYPE_COMMAND,           "Get an integer",                            commandGetAnInteger,         NULL},
-  {MENU_ITEM_TYPE_COMMAND,           "Get a float",                               commandGetAFloat,            NULL},
-  {MENU_ITEM_TYPE_COMMAND,           "Make a choice",                             commandMakeAChoice,          NULL},
-  {MENU_ITEM_TYPE_COMMAND,           "Save settings",                             commandGetValuesAndSave,     NULL},
+  {MENU_ITEM_TYPE_MAIN_MENU_HEADER,  "TeenSynth",                                 MENU_COLUMNS_2,              mainMenu},
+  {MENU_ITEM_TYPE_COMMAND,           "Oscillator 1",                              oscillatorOneChoices,        NULL},
+  {MENU_ITEM_TYPE_COMMAND,           "Oscillator 2",                              oscillatorTwoChoices,        NULL},
+  {MENU_ITEM_TYPE_COMMAND,           "ADSR",                                      ampADSRChoices,              NULL},
+  {MENU_ITEM_TYPE_COMMAND,           "Mixer",                                     mixerChoices,                NULL},
   {MENU_ITEM_TYPE_TOGGLE,            "Self destruct",                             enableSelfDestructCallback,  NULL},
   {MENU_ITEM_TYPE_END_OF_MENU,       "",                                          NULL,                        NULL}
 };
@@ -286,57 +290,31 @@ void commandGetAFloat(void)
 //
 // menu command that demonstrates how to prompt the user to select one of n things
 //
-static int powerSelection = 2;
-static int colorSelection = 1;
-static int safetySelection = 0;
+static int oscillatorOneSelection = 1;
+static int oscillatorTwoSelection = 1;
 
-void commandMakeAChoice(void)
+void oscillatorOneChoices(void)
 {  
-  ui.drawTitleBarWithBackButton("Using Selection Boxes");
+  ui.drawTitleBarWithBackButton("Oscillator One");
   ui.clearDisplaySpace();
 
   //
   // define and display 3 selection boxes, one with 2 choice, one with 3 choice 
   // and one with 4
   //
-  SELECTION_BOX powerSelectionBox;
-  powerSelectionBox.labelText = "Laser power level";
-  powerSelectionBox.value = powerSelection;
-  powerSelectionBox.choice0Text = "Low";
-  powerSelectionBox.choice1Text = "Medium";
-  powerSelectionBox.choice2Text = "High";
-  powerSelectionBox.choice3Text = "";
-  powerSelectionBox.centerX = ui.displaySpaceCenterX;
-  powerSelectionBox.centerY = 79;
-  powerSelectionBox.width = 250;
-  powerSelectionBox.height = 33;
-  ui.drawSelectionBox(powerSelectionBox);
 
-  SELECTION_BOX colorSelectionBox;
-  colorSelectionBox.labelText = "Laser color";
-  colorSelectionBox.value = colorSelection;
-  colorSelectionBox.choice0Text = "Sine";
-  colorSelectionBox.choice1Text = "Triangle";
-  colorSelectionBox.choice2Text = "Saw";
-  colorSelectionBox.choice3Text = "Pulse";
-  colorSelectionBox.centerX = ui.displaySpaceCenterX;
-  colorSelectionBox.centerY = 146;
-  colorSelectionBox.width = 250;
-  colorSelectionBox.height = 33;
-  ui.drawSelectionBox(colorSelectionBox);
-
-  SELECTION_BOX safetySelectionBox;
-  safetySelectionBox.labelText = "Laser safety switch";
-  safetySelectionBox.value = safetySelection;
-  safetySelectionBox.choice0Text = "Off";
-  safetySelectionBox.choice1Text = "On";
-  safetySelectionBox.choice2Text = "";
-  safetySelectionBox.choice3Text = "";
-  safetySelectionBox.centerX = ui.displaySpaceCenterX;
-  safetySelectionBox.centerY = 214;
-  safetySelectionBox.width = 250;
-  safetySelectionBox.height = 33;
-  ui.drawSelectionBox(safetySelectionBox);
+  SELECTION_BOX oscillatorOneBox;
+  oscillatorOneBox.labelText = "Oscillator 1";
+  oscillatorOneBox.value = oscillatorOneSelection;
+  oscillatorOneBox.choice0Text = "Sine";
+  oscillatorOneBox.choice1Text = "Triangle";
+  oscillatorOneBox.choice2Text = "Saw";
+  oscillatorOneBox.choice3Text = "Pulse";
+  oscillatorOneBox.centerX = ui.displaySpaceCenterX;
+  oscillatorOneBox.centerY = 79;
+  oscillatorOneBox.width = 250;
+  oscillatorOneBox.height = 33;
+  ui.drawSelectionBox(oscillatorOneBox);
 
   //
   // process touch events
@@ -348,9 +326,9 @@ void commandMakeAChoice(void)
     //
     // process touch events in the selection boxes
     //
-    ui.checkForSelectionBoxTouched(powerSelectionBox);
-    ui.checkForSelectionBoxTouched(colorSelectionBox);
-    ui.checkForSelectionBoxTouched(safetySelectionBox);
+    if (ui.checkForSelectionBoxTouched(oscillatorOneBox)) {
+      myControlChange(1, CCosc1,oscillatorOneBox.value);
+    }
 
     //
     // when the "Back" button is pressed, save all the values selected
@@ -358,15 +336,60 @@ void commandMakeAChoice(void)
     //
     if (ui.checkForBackButtonClicked())
     {
-      powerSelection = powerSelectionBox.value;
-      colorSelection = colorSelectionBox.value;
-      safetySelection = safetySelectionBox.value;
+      oscillatorOneSelection = oscillatorOneBox.value;
       return;
     }
   }
 }
 
+void oscillatorTwoChoices(void)
+{  
+  ui.drawTitleBarWithBackButton("Oscillator Two");
+  ui.clearDisplaySpace();
 
+  //
+  // define and display 3 selection boxes, one with 2 choice, one with 3 choice 
+  // and one with 4
+  //
+
+  SELECTION_BOX oscillatorTwoBox;
+  oscillatorTwoBox.labelText = "Oscillator 2";
+  oscillatorTwoBox.value = oscillatorTwoSelection;
+  oscillatorTwoBox.choice0Text = "Sine";
+  oscillatorTwoBox.choice1Text = "Triangle";
+  oscillatorTwoBox.choice2Text = "Saw";
+  oscillatorTwoBox.choice3Text = "Pulse";
+  oscillatorTwoBox.centerX = ui.displaySpaceCenterX;
+  oscillatorTwoBox.centerY = 79;
+  oscillatorTwoBox.width = 250;
+  oscillatorTwoBox.height = 33;
+  ui.drawSelectionBox(oscillatorTwoBox);
+  
+  //
+  // process touch events
+  //
+  while(true)
+  {
+    ui.getTouchEvents();
+
+    //
+    // process touch events in the selection boxes
+    //
+    if (ui.checkForSelectionBoxTouched(oscillatorTwoBox)) {
+      myControlChange(1, CCosc2,oscillatorTwoBox.value);
+    }
+
+    //
+    // when the "Back" button is pressed, save all the values selected
+    // by the user
+    //
+    if (ui.checkForBackButtonClicked())
+    {
+      oscillatorTwoSelection = oscillatorTwoBox.value;
+      return;
+    }
+  }
+}
 
 //
 // toggle used to enable / disable "Self Destruct Mode"
@@ -414,25 +437,32 @@ void enableSelfDestructCallback(void)
 //
 // storage locations in EEPROM for configuration values settable below
 //
-const int EEPROM_X_OFFSET = 0;                        // int requires 5 bytes of EEPROM storage
-const int EEPROM_X_SCALER = EEPROM_X_OFFSET + 5;      // float requires 5 bytes of EEPROM storage
-const int EEPROM_Y_OFFSET = EEPROM_X_SCALER + 5;      // int requires 5 bytes of EEPROM storage
-const int EEPROM_Y_SCALER = EEPROM_Y_OFFSET + 5;      // float requires 5 bytes of EEPROM storage
-
+const int EEPROM_AMP_ATTACK = 0;                        // int requires 5 bytes of EEPROM storage
+const int EEPROM_AMP_DECAY = EEPROM_AMP_ATTACK + 5;      // int requires 5 bytes of EEPROM storage
+const int EEPROM_AMP_SUSTAIN = EEPROM_AMP_DECAY + 5;      // int requires 5 bytes of EEPROM storage
+const int EEPROM_AMP_RELEASE = EEPROM_AMP_SUSTAIN + 5;      // int requires 5 bytes of EEPROM storage
+const int EEPROM_MIXER_OSC1 = EEPROM_AMP_RELEASE + 5;      // int requires 5 bytes of EEPROM storage
+const int EEPROM_MIXER_OSC2 = EEPROM_MIXER_OSC1 + 5;      // int requires 5 bytes of EEPROM storage
+const int EEPROM_MIXER_NOISE = EEPROM_MIXER_OSC2 + 5;      // int requires 5 bytes of EEPROM storage
+const int EEPROM_MIXER_SUB = EEPROM_MIXER_NOISE + 5;      // int requires 5 bytes of EEPROM storage
 
 //
 // defaults for configuration values, these values are used if they have never been set before
 //
-const int   DEFAULT_X_OFFSET   = 50; 
-const float DEFAULT_X_SCALER   = 0.57;
-const int   DEFAULT_Y_OFFSET   = -51;
-const float DEFAULT_Y_SCALER   = 0.85;
+const int   DEFAULT_AMP_ATTACK   = 1; 
+const int   DEFAULT_AMP_DECAY   = 0;
+const int   DEFAULT_AMP_SUSTAIN   = 127;
+const int   DEFAULT_AMP_RELEASE   = 1;
+const int   DEFAULT_MIXER_OSC1   = 127;
+const int   DEFAULT_MIXER_OSC2   = 127;
+const int   DEFAULT_MIXER_NOISE   = 0;
+const int   DEFAULT_MIXER_SUB   = 127;
 
 
 //
 // menu command that demonstrates how to prompt the user for info then save it
 //
-void commandGetValuesAndSave(void)
+void mixerChoices(void)
 {
   const int numberBoxWidth = 145;
   const int numberBoxHeight = 34;
@@ -441,82 +471,76 @@ void commandGetValuesAndSave(void)
   //
   // read initial values from the EEPROM, if the EEPROM has never been set, use default values
   //
-  int initialXOffset = ui.readConfigurationInt(EEPROM_X_OFFSET, DEFAULT_X_OFFSET);
-  float initialXScaler = ui.readConfigurationFloat(EEPROM_X_SCALER, DEFAULT_X_SCALER);
-  int initialYOffset = ui.readConfigurationInt(EEPROM_Y_OFFSET, DEFAULT_Y_OFFSET);
-  float initialYScaler = ui.readConfigurationFloat(EEPROM_Y_SCALER, DEFAULT_Y_SCALER);
+  int initialMixerOsc1 = ui.readConfigurationInt(EEPROM_MIXER_OSC1, DEFAULT_MIXER_OSC1);;
+  int initialMixerOsc2 = ui.readConfigurationInt(EEPROM_MIXER_OSC2, DEFAULT_MIXER_OSC2);
+  int initialMixerNoise = ui.readConfigurationInt(EEPROM_MIXER_NOISE, DEFAULT_MIXER_NOISE);
+  int initialMixerSub = ui.readConfigurationInt(EEPROM_MIXER_SUB, DEFAULT_MIXER_SUB);
 
 
   //
   // draw title bar without a "Back" button
   //
-  ui.drawTitleBar("Calibrate X and Y Axes");
+  ui.drawTitleBar("Mixer");
   ui.clearDisplaySpace();
   
 
   //
   // define and display number boxes for setting calibration constants
   //
-  NUMBER_BOX XOffset_NumberBox;
-  XOffset_NumberBox.labelText    = "Set X offset";
-  XOffset_NumberBox.value        = initialXOffset;
-  XOffset_NumberBox.minimumValue = -200;
-  XOffset_NumberBox.maximumValue = 200;
-  XOffset_NumberBox.stepAmount   = 2;
-  XOffset_NumberBox.centerX      = ui.displaySpaceCenterX - 80;
-  XOffset_NumberBox.centerY      = 83;
-  XOffset_NumberBox.width        = numberBoxWidth;
-  XOffset_NumberBox.height       = numberBoxHeight;
-  ui.drawNumberBox(XOffset_NumberBox);
+  NUMBER_BOX mixerOsc1_NumberBox;
+  mixerOsc1_NumberBox.labelText    = "Oscillator 1";
+  mixerOsc1_NumberBox.value        = initialMixerOsc1;
+  mixerOsc1_NumberBox.minimumValue = 0;
+  mixerOsc1_NumberBox.maximumValue = 127;
+  mixerOsc1_NumberBox.stepAmount   = 10;
+  mixerOsc1_NumberBox.centerX      = ui.displaySpaceCenterX - 80;
+  mixerOsc1_NumberBox.centerY      = 83;
+  mixerOsc1_NumberBox.width        = numberBoxWidth;
+  mixerOsc1_NumberBox.height       = numberBoxHeight;
+  ui.drawNumberBox(mixerOsc1_NumberBox);
 
-  NUMBER_BOX_FLOAT XScaler_NumberBox;
-  XScaler_NumberBox.labelText            = "Set X scaler";
-  XScaler_NumberBox.value                = initialXScaler;
-  XScaler_NumberBox.minimumValue         = 0.0;
-  XScaler_NumberBox.maximumValue         = 1.0;
-  XScaler_NumberBox.stepAmount           = 0.01;
-  XScaler_NumberBox.digitsRightOfDecimal = 2;
-  XScaler_NumberBox.centerX              = ui.displaySpaceCenterX - 80;
-  XScaler_NumberBox.centerY              = 157;
-  XScaler_NumberBox.width                = numberBoxWidth;
-  XScaler_NumberBox.height               = numberBoxHeight;
-  ui.drawNumberBox(XScaler_NumberBox);
+  NUMBER_BOX mixerOsc2_NumberBox;
+  mixerOsc2_NumberBox.labelText            = "Oscillator 2";
+  mixerOsc2_NumberBox.value                = initialMixerOsc2;
+  mixerOsc2_NumberBox.minimumValue         = 0;
+  mixerOsc2_NumberBox.maximumValue         = 127;
+  mixerOsc2_NumberBox.stepAmount           = 10;
+  mixerOsc2_NumberBox.centerX              = ui.displaySpaceCenterX + 80;
+  mixerOsc2_NumberBox.centerY              = 83;
+  mixerOsc2_NumberBox.width                = numberBoxWidth;
+  mixerOsc2_NumberBox.height               = numberBoxHeight;
+  ui.drawNumberBox(mixerOsc2_NumberBox);
 
 
-  NUMBER_BOX YOffset_NumberBox;
-  YOffset_NumberBox.labelText    = "Set Y offset";
-  YOffset_NumberBox.value        = initialYOffset;
-  YOffset_NumberBox.minimumValue = -200;
-  YOffset_NumberBox.maximumValue = 200;
-  YOffset_NumberBox.stepAmount   = 2;
-  YOffset_NumberBox.centerX      = ui.displaySpaceCenterX + 80;
-  YOffset_NumberBox.centerY      = 83;
-  YOffset_NumberBox.width        = numberBoxWidth;
-  YOffset_NumberBox.height       = numberBoxHeight;
-  ui.drawNumberBox(YOffset_NumberBox);
-
-  NUMBER_BOX_FLOAT YScaler_NumberBox;
-  YScaler_NumberBox.labelText            = "Set Y scaler";
-  YScaler_NumberBox.value                = initialYScaler;
-  YScaler_NumberBox.minimumValue         = 0.0;
-  YScaler_NumberBox.maximumValue         = 1.0;
-  YScaler_NumberBox.stepAmount           = 0.01;
-  YScaler_NumberBox.digitsRightOfDecimal = 2;
-  YScaler_NumberBox.centerX              = ui.displaySpaceCenterX + 80;
-  YScaler_NumberBox.centerY              = 157;
-  YScaler_NumberBox.width                = numberBoxWidth;
-  YScaler_NumberBox.height               = numberBoxHeight;
-  ui.drawNumberBox(YScaler_NumberBox);
-
+  NUMBER_BOX mixerNoise_NumberBox;
+  mixerNoise_NumberBox.labelText    = "Noise";
+  mixerNoise_NumberBox.value        = initialMixerNoise;
+  mixerNoise_NumberBox.minimumValue = 0;
+  mixerNoise_NumberBox.maximumValue = 127;
+  mixerNoise_NumberBox.stepAmount   = 10;
+  mixerNoise_NumberBox.centerX      = ui.displaySpaceCenterX + 80;
+  mixerNoise_NumberBox.centerY      = 157;
+  mixerNoise_NumberBox.width        = numberBoxWidth;
+  mixerNoise_NumberBox.height       = numberBoxHeight;
+  ui.drawNumberBox(mixerNoise_NumberBox);
+  
+  NUMBER_BOX mixerSub_NumberBox;
+  mixerSub_NumberBox.labelText    = "Sub";
+  mixerSub_NumberBox.value        = initialMixerSub;
+  mixerSub_NumberBox.minimumValue = 0;
+  mixerSub_NumberBox.maximumValue = 127;
+  mixerSub_NumberBox.stepAmount   = 10;
+  mixerSub_NumberBox.centerX      = ui.displaySpaceCenterX - 80;
+  mixerSub_NumberBox.centerY      = 157;
+  mixerSub_NumberBox.width        = numberBoxWidth;
+  mixerSub_NumberBox.height       = numberBoxHeight;
+  ui.drawNumberBox(mixerSub_NumberBox);
 
   //
   // define and display "OK" and "Cancel" buttons
   //
-  BUTTON okButton        = {"OK",     ui.displaySpaceCenterX-80,   ui.displaySpaceBottomY-27,  100 , numberBoxHeight};
+  BUTTON okButton        = {"OK",     ui.displaySpaceCenterX,   ui.displaySpaceBottomY-27,  100 , numberBoxHeight};
   ui.drawButton(okButton);
-
-  BUTTON cancelButton    = {"Cancel", ui.displaySpaceCenterX+80,   ui.displaySpaceBottomY-27,  100 , numberBoxHeight};
-  ui.drawButton(cancelButton);
 
 
   //
@@ -529,10 +553,18 @@ void commandGetValuesAndSave(void)
     //
     // process touch events on the Number Boxes
     //
-    ui.checkForNumberBoxTouched(XOffset_NumberBox);
-    ui.checkForNumberBoxTouched(XScaler_NumberBox);
-    ui.checkForNumberBoxTouched(YOffset_NumberBox);
-    ui.checkForNumberBoxTouched(YScaler_NumberBox);
+    if (ui.checkForNumberBoxTouched(mixerOsc1_NumberBox)){
+      myControlChange(1, CCmixer1, mixerOsc1_NumberBox.value);
+    }
+    if (ui.checkForNumberBoxTouched(mixerOsc2_NumberBox)){
+      myControlChange(1, CCmixer2, mixerOsc2_NumberBox.value);
+    }
+    if (ui.checkForNumberBoxTouched(mixerNoise_NumberBox)){
+      myControlChange(1, CCmixer3, mixerNoise_NumberBox.value);
+    }
+    if (ui.checkForNumberBoxTouched(mixerSub_NumberBox)){
+      myControlChange(1, CCmixer4, mixerSub_NumberBox.value);
+    }
 
     //
     // check for touch events on the "OK" button
@@ -542,17 +574,136 @@ void commandGetValuesAndSave(void)
       //
       // save the values set by the user to EEPROM, then return to the menu
       //
-      ui.writeConfigurationInt(EEPROM_X_OFFSET, XOffset_NumberBox.value);
-      ui.writeConfigurationFloat(EEPROM_X_SCALER, XScaler_NumberBox.value);
-      ui.writeConfigurationInt(EEPROM_Y_OFFSET, YOffset_NumberBox.value);
-      ui.writeConfigurationFloat(EEPROM_Y_SCALER, YScaler_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_MIXER_OSC1, mixerOsc1_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_MIXER_OSC2, mixerOsc2_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_MIXER_NOISE, mixerNoise_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_MIXER_SUB, mixerSub_NumberBox.value);
       return;
+    }
+  }
+}
+
+//
+// menu command that demonstrates how to prompt the user for info then save it
+//
+void ampADSRChoices(void)
+{
+  const int numberBoxWidth = 145;
+  const int numberBoxHeight = 34;
+
+
+  //
+  // read initial values from the EEPROM, if the EEPROM has never been set, use default values
+  //
+  int initialAmpAttack = ui.readConfigurationInt(EEPROM_AMP_ATTACK, DEFAULT_AMP_ATTACK);
+  int initialAmpDecay = ui.readConfigurationInt(EEPROM_AMP_DECAY, DEFAULT_AMP_DECAY);
+  int initialAmpSustain = ui.readConfigurationInt(EEPROM_AMP_SUSTAIN, DEFAULT_AMP_SUSTAIN);
+  int initialAmpRelease = ui.readConfigurationInt(EEPROM_AMP_RELEASE, DEFAULT_AMP_RELEASE);
+
+
+  //
+  // draw title bar without a "Back" button
+  //
+  ui.drawTitleBar("Amp ADSR");
+  ui.clearDisplaySpace();
+  
+
+  //
+  // define and display number boxes for setting calibration constants
+  //
+  NUMBER_BOX ampAttack_NumberBox;
+  ampAttack_NumberBox.labelText    = "Attack";
+  ampAttack_NumberBox.value        = initialAmpAttack;
+  ampAttack_NumberBox.minimumValue = 0;
+  ampAttack_NumberBox.maximumValue = 127;
+  ampAttack_NumberBox.stepAmount   = 1;
+  ampAttack_NumberBox.centerX      = ui.displaySpaceCenterX - 80;
+  ampAttack_NumberBox.centerY      = 83;
+  ampAttack_NumberBox.width        = numberBoxWidth;
+  ampAttack_NumberBox.height       = numberBoxHeight;
+  ui.drawNumberBox(ampAttack_NumberBox);
+
+  NUMBER_BOX ampDecay_NumberBox;
+  ampDecay_NumberBox.labelText            = "Decay";
+  ampDecay_NumberBox.value                = initialAmpDecay;
+  ampDecay_NumberBox.minimumValue         = 0;
+  ampDecay_NumberBox.maximumValue         = 127;
+  ampDecay_NumberBox.stepAmount           = 1;
+  ampDecay_NumberBox.centerX              = ui.displaySpaceCenterX - 80;
+  ampDecay_NumberBox.centerY              = 157;
+  ampDecay_NumberBox.width                = numberBoxWidth;
+  ampDecay_NumberBox.height               = numberBoxHeight;
+  ui.drawNumberBox(ampDecay_NumberBox);
+
+
+  NUMBER_BOX ampSustain_NumberBox;
+  ampSustain_NumberBox.labelText    = "Sustain";
+  ampSustain_NumberBox.value        = initialAmpSustain;
+  ampSustain_NumberBox.minimumValue = 0;
+  ampSustain_NumberBox.maximumValue = 127;
+  ampSustain_NumberBox.stepAmount   = 1;
+  ampSustain_NumberBox.centerX      = ui.displaySpaceCenterX + 80;
+  ampSustain_NumberBox.centerY      = 83;
+  ampSustain_NumberBox.width        = numberBoxWidth;
+  ampSustain_NumberBox.height       = numberBoxHeight;
+  ui.drawNumberBox(ampSustain_NumberBox);
+
+  NUMBER_BOX ampRelease_NumberBox;
+  ampRelease_NumberBox.labelText            = "Release";
+  ampRelease_NumberBox.value                = initialAmpRelease;
+  ampRelease_NumberBox.minimumValue         = 0;
+  ampRelease_NumberBox.maximumValue         = 127;
+  ampRelease_NumberBox.stepAmount           = 1;
+  ampRelease_NumberBox.centerX              = ui.displaySpaceCenterX + 80;
+  ampRelease_NumberBox.centerY              = 157;
+  ampRelease_NumberBox.width                = numberBoxWidth;
+  ampRelease_NumberBox.height               = numberBoxHeight;
+  ui.drawNumberBox(ampRelease_NumberBox);
+
+
+  //
+  // define and display "OK" and "Cancel" buttons
+  //
+  BUTTON okButton        = {"OK",     ui.displaySpaceCenterX,   ui.displaySpaceBottomY-27,  100 , numberBoxHeight};
+  ui.drawButton(okButton);
+
+
+  //
+  // process touch events
+  //
+  while(true)
+  {
+    ui.getTouchEvents();
+
+    //
+    // process touch events on the Number Boxes
+    //
+    if (ui.checkForNumberBoxTouched(ampAttack_NumberBox)){
+      myControlChange(1, CCattack, ampAttack_NumberBox.value);
+    }
+    if (ui.checkForNumberBoxTouched(ampDecay_NumberBox)){
+      myControlChange(1, CCdecay, ampDecay_NumberBox.value);
+    }
+    if (ui.checkForNumberBoxTouched(ampSustain_NumberBox)){
+      myControlChange(1, CCsustain, ampSustain_NumberBox.value);
+    }
+    if (ui.checkForNumberBoxTouched(ampRelease_NumberBox)){
+      myControlChange(1, CCrelease, ampRelease_NumberBox.value);
     }
 
     //
-    // check for touch events on the "Cancel" button
+    // check for touch events on the "OK" button
     //
-    if (ui.checkForButtonClicked(cancelButton))
+    if (ui.checkForButtonClicked(okButton))
+    {
+      //
+      // save the values set by the user to EEPROM, then return to the menu
+      //
+      ui.writeConfigurationInt(EEPROM_AMP_ATTACK, ampAttack_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_AMP_DECAY, ampDecay_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_AMP_SUSTAIN, ampSustain_NumberBox.value);
+      ui.writeConfigurationInt(EEPROM_AMP_RELEASE, ampRelease_NumberBox.value);
       return;
+    }
   }
 }

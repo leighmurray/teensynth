@@ -22,41 +22,41 @@
 #define CCmixer1 100
 #define CCmixer2 101
 #define CCmixer3 102
-#define CCoctave 103
-#define CCattack 104
-#define CCdecay 105
-#define CCsustain 106
-#define CCrelease 107
-#define CCosc1 108
-#define CCosc2 109
-#define CCdetune 110
-#define CCfilterfreq 111
-#define CCfilterres 112
-#define CCbendrange 113
-#define CClfospeed 114
-#define CClfodepth 115
-#define CClfomode 116
-
+#define CCmixer4 103
+#define CCoctave 104
+#define CCattack 105
+#define CCdecay 106
+#define CCsustain 107
+#define CCrelease 108
+#define CCosc1 109
+#define CCosc2 110
+#define CCdetune 111
+#define CCfilterfreq 112
+#define CCfilterres 113
+#define CCbendrange 114
+#define CClfospeed 115
+#define CClfodepth 116
+#define CClfomode 117
 
 // GUItool: begin automatically generated code
-AudioSynthWaveform       waveform2;      //xy=222,454
-AudioSynthWaveform       waveform1;      //xy=226,395
-AudioSynthNoisePink      pink1;          //xy=234,505
-AudioMixer4              mixer1;         //xy=417,455
-AudioFilterStateVariable filter1;        //xy=565,458
-AudioEffectEnvelope      envelope1;      //xy=728,459
-AudioAmplifier           amp1;           //xy=920,454
-AudioAnalyzeFFT1024      fft1024;        //xy=1095,502
-AudioOutputI2S           i2s1;           //xy=1102,413
-AudioConnection          patchCord1(waveform2, 0, mixer1, 1);
-AudioConnection          patchCord2(waveform1, 0, mixer1, 0);
-AudioConnection          patchCord3(pink1, 0, mixer1, 2);
-AudioConnection          patchCord4(mixer1, 0, filter1, 0);
-AudioConnection          patchCord5(filter1, 0, envelope1, 0);
-AudioConnection          patchCord6(envelope1, amp1);
-AudioConnection          patchCord7(amp1, 0, i2s1, 0);
-AudioConnection          patchCord8(amp1, 0, i2s1, 1);
-AudioConnection          patchCord9(amp1, fft1024);
+AudioSynthNoisePink      pink1;          //xy=255,383
+AudioSynthWaveform       waveform2;      //xy=260,338
+AudioSynthWaveform       waveform3;      //xy=261,431
+AudioSynthWaveform       waveform1;      //xy=264,279
+AudioMixer4              mixer1;         //xy=455,339
+AudioFilterStateVariable filter1;        //xy=603,342
+AudioEffectEnvelope      envelope1;      //xy=766,343
+AudioAmplifier           amp1;           //xy=958,338
+AudioOutputI2S           i2s1;           //xy=1138,301
+AudioConnection          patchCord1(pink1, 0, mixer1, 2);
+AudioConnection          patchCord2(waveform2, 0, mixer1, 1);
+AudioConnection          patchCord3(waveform3, 0, mixer1, 3);
+AudioConnection          patchCord4(waveform1, 0, mixer1, 0);
+AudioConnection          patchCord5(mixer1, 0, filter1, 0);
+AudioConnection          patchCord6(filter1, 0, envelope1, 0);
+AudioConnection          patchCord7(envelope1, amp1);
+AudioConnection          patchCord8(amp1, 0, i2s1, 0);
+AudioConnection          patchCord9(amp1, 0, i2s1, 1);
 // GUItool: end automatically generated code
 
 
@@ -67,6 +67,7 @@ byte globalNote = 0;
 byte globalVelocity = 0;
 int octave1 = 0;
 int octave2 = 0;
+int octaveSub = -12;
 const float DIV127 = (1.0 / 127.0);
 float detuneFactor = 1;
 float bendFactor = 1;
@@ -113,6 +114,11 @@ void synthSetup() {
   waveform2.amplitude(0.75);
   waveform2.frequency(123);
   waveform2.pulseWidth(0.15);
+  
+  waveform3.begin(WAVEFORM_SQUARE);
+  waveform3.amplitude(0.75);
+  waveform3.frequency(123);
+  waveform3.pulseWidth(0.15);
 
   pink1.amplitude(1.0);
 
@@ -196,9 +202,12 @@ void keyBuff(byte note, bool playNote) {
 void oscPlay(byte note) {
   waveform1.frequency(noteFreqs[note + octave1] * bendFactor * LFOpitch);
   waveform2.frequency(noteFreqs[note + octave2] * detuneFactor * bendFactor * LFOpitch);
+  waveform3.frequency(noteFreqs[note + octave1 + octaveSub] * bendFactor * LFOpitch); // always play one octave below waveform1
+  
   float velo = 0.75 * (globalVelocity * DIV127);//TEST velocity limit to 0.75
   waveform1.amplitude(velo);
   waveform2.amplitude(velo);
+  waveform3.amplitude(velo);
   pink1.amplitude(velo);
   //envelope1.releaseNoteOn(5);//TEST
   envelope1.noteOn();
@@ -211,6 +220,7 @@ void oscStop() {
 void oscSet() {
   waveform1.frequency(noteFreqs[globalNote + octave1] * bendFactor * LFOpitch);
   waveform2.frequency(noteFreqs[globalNote + octave2] * detuneFactor * bendFactor * LFOpitch);
+  waveform3.frequency(noteFreqs[globalNote + octave1 + octaveSub] * bendFactor * LFOpitch); // always play one octave below waveform1
 }
 
 void myControlChange(byte channel, byte control, byte value) {
@@ -225,6 +235,10 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCmixer3:
       mixer1.gain(2, 0.3 * (value * DIV127));
+      break;
+
+    case CCmixer4:
+      mixer1.gain(3, 0.3 * (value * DIV127));
       break;
 
     case CCoctave:
@@ -484,18 +498,6 @@ void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom) {
         LFOstop = true;
       }
     }
-  }
-}
-
-void getFFT(float *levels) {
-  if (fft1024.available()) {
-    for (int i=0; i < 240; i++) {
-      levels[i] = fft1024.output[i];
-    }    
-  } else {
-    //for (var i=0; i < 240; i++) {
-    //  levels[i] = 0;
-    //}
   }
 }
 
