@@ -39,15 +39,16 @@
 #define CClfomode 117
 
 // GUItool: begin automatically generated code
-AudioSynthNoisePink      pink1;          //xy=255,383
-AudioSynthWaveform       waveform2;      //xy=260,338
-AudioSynthWaveform       waveform3;      //xy=261,431
-AudioSynthWaveform       waveform1;      //xy=264,279
-AudioMixer4              mixer1;         //xy=455,339
-AudioFilterStateVariable filter1;        //xy=603,342
-AudioEffectEnvelope      envelope1;      //xy=766,343
-AudioAmplifier           amp1;           //xy=958,338
-AudioOutputI2S           i2s1;           //xy=1138,301
+AudioSynthNoisePink      pink1;          //xy=184,348
+AudioSynthWaveform       waveform2;      //xy=189,303
+AudioSynthWaveform       waveform3;      //xy=190,396
+AudioSynthWaveform       waveform1;      //xy=193,244
+AudioMixer4              mixer1;         //xy=384,304
+AudioFilterStateVariable filter1;        //xy=532,307
+AudioEffectEnvelope      envelope1;      //xy=695,308
+AudioAmplifier           amp1;           //xy=887,303
+AudioEffectDelay         delay1;         //xy=1011,409
+AudioOutputI2S           i2s1;           //xy=1177,307
 AudioConnection          patchCord1(pink1, 0, mixer1, 2);
 AudioConnection          patchCord2(waveform2, 0, mixer1, 1);
 AudioConnection          patchCord3(waveform3, 0, mixer1, 3);
@@ -55,8 +56,9 @@ AudioConnection          patchCord4(waveform1, 0, mixer1, 0);
 AudioConnection          patchCord5(mixer1, 0, filter1, 0);
 AudioConnection          patchCord6(filter1, 0, envelope1, 0);
 AudioConnection          patchCord7(envelope1, amp1);
-AudioConnection          patchCord8(amp1, 0, i2s1, 0);
-AudioConnection          patchCord9(amp1, 0, i2s1, 1);
+AudioConnection          patchCord8(amp1, delay1);
+AudioConnection          patchCord9(amp1, 0, i2s1, 0);
+AudioConnection          patchCord10(delay1, 0, i2s1, 1);
 // GUItool: end automatically generated code
 
 
@@ -96,9 +98,8 @@ void oscSet();
 void myControlChange(byte channel, byte control, byte value);
 void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom);
 
-
 void synthSetup() {
-  AudioMemory(20);
+  AudioMemory(120);
 
   usbMIDI.setHandleControlChange(myControlChange);
   usbMIDI.setHandleNoteOff(myNoteOff);
@@ -224,21 +225,23 @@ void oscSet() {
 }
 
 void myControlChange(byte channel, byte control, byte value) {
+  
+  float gainLimit = 1.0;
   switch (control) {
     case CCmixer1:
-      mixer1.gain(0, 0.3 * (value * DIV127)); //TEST gain limit to 0.3
+      mixer1.gain(0, gainLimit * (value * DIV127)); //TEST gain limit to 0.3
       break;
 
     case CCmixer2:
-      mixer1.gain(1, 0.3 * (value * DIV127));
+      mixer1.gain(1, gainLimit * (value * DIV127));
       break;
 
     case CCmixer3:
-      mixer1.gain(2, 0.3 * (value * DIV127));
+      mixer1.gain(2, gainLimit * (value * DIV127));
       break;
 
     case CCmixer4:
-      mixer1.gain(3, 0.3 * (value * DIV127));
+      mixer1.gain(3, gainLimit * (value * DIV127));
       break;
 
     case CCoctave:

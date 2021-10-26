@@ -17,11 +17,12 @@
 
 // ***********************************************************************
 
+#define ENCODER_OPTIMIZE_INTERRUPTS
 #include <TeensyUserInterface.h>
 #include <font_Arial.h>
 #include <font_ArialBold.h>
 #include "SynthLib.h"
-
+#include <Encoder.h>
 
 void commandGetAnInteger(void);
 void commandGetAFloat(void);
@@ -34,19 +35,21 @@ void enableSelfDestructCallback(void);
 // create the user interface object
 //
 TeensyUserInterface ui;
-
-
+Encoder mainEncoder(4, 5);
+int encoderCC = CCmixer1;
 
 // ---------------------------------------------------------------------------------
 //                                 Setup the hardware
 // ---------------------------------------------------------------------------------
+
+void setControlChange(byte controlChange, byte value);
 
 void menuSetup() 
 {
   //
   // initialize the user interface, including setting the screen orientation and font
   //
-  ui.begin(LCD_ORIENTATION_LANDSCAPE_4PIN_RIGHT, Arial_9_Bold);
+  ui.begin(LCD_ORIENTATION_LANDSCAPE_4PIN_LEFT, Arial_9_Bold);
 
   //
   // use a grayscale color palette
@@ -94,7 +97,21 @@ MENU_ITEM mainMenu[] = {
   {MENU_ITEM_TYPE_END_OF_MENU,       "",                                          NULL,                        NULL}
 };
 
+int previousEncoderValue = 0;
 
+void handleMainEncoder() {
+  long currentEncoderValue = mainEncoder.read();
+
+  if (previousEncoderValue != currentEncoderValue) {
+    int modulus = currentEncoderValue % 4;
+    if (modulus == 0)
+    {
+      setControlChange(encoderCC, currentEncoderValue*4);
+    }
+  }
+  previousEncoderValue = currentEncoderValue;
+  
+}
 
 //
 // display the menu, then execute commands selected by the user
@@ -104,6 +121,10 @@ void menuLoop()
   ui.displayAndExecuteMenu(mainMenu);
 }
 
+void setControlChange(byte controlChange, byte value){
+  encoderCC = controlChange;
+  myControlChange(1, controlChange, value);
+}
 
 
 // ---------------------------------------------------------------------------------
@@ -327,7 +348,7 @@ void oscillatorOneChoices(void)
     // process touch events in the selection boxes
     //
     if (ui.checkForSelectionBoxTouched(oscillatorOneBox)) {
-      myControlChange(1, CCosc1,oscillatorOneBox.value);
+      setControlChange(CCosc1,oscillatorOneBox.value);
     }
 
     //
@@ -376,7 +397,7 @@ void oscillatorTwoChoices(void)
     // process touch events in the selection boxes
     //
     if (ui.checkForSelectionBoxTouched(oscillatorTwoBox)) {
-      myControlChange(1, CCosc2,oscillatorTwoBox.value);
+      setControlChange(CCosc2,oscillatorTwoBox.value);
     }
 
     //
@@ -554,16 +575,16 @@ void mixerChoices(void)
     // process touch events on the Number Boxes
     //
     if (ui.checkForNumberBoxTouched(mixerOsc1_NumberBox)){
-      myControlChange(1, CCmixer1, mixerOsc1_NumberBox.value);
+      setControlChange(CCmixer1, mixerOsc1_NumberBox.value);
     }
     if (ui.checkForNumberBoxTouched(mixerOsc2_NumberBox)){
-      myControlChange(1, CCmixer2, mixerOsc2_NumberBox.value);
+      setControlChange(CCmixer2, mixerOsc2_NumberBox.value);
     }
     if (ui.checkForNumberBoxTouched(mixerNoise_NumberBox)){
-      myControlChange(1, CCmixer3, mixerNoise_NumberBox.value);
+      setControlChange(CCmixer3, mixerNoise_NumberBox.value);
     }
     if (ui.checkForNumberBoxTouched(mixerSub_NumberBox)){
-      myControlChange(1, CCmixer4, mixerSub_NumberBox.value);
+      setControlChange(CCmixer4, mixerSub_NumberBox.value);
     }
 
     //
@@ -679,16 +700,16 @@ void ampADSRChoices(void)
     // process touch events on the Number Boxes
     //
     if (ui.checkForNumberBoxTouched(ampAttack_NumberBox)){
-      myControlChange(1, CCattack, ampAttack_NumberBox.value);
+      setControlChange(CCattack, ampAttack_NumberBox.value);
     }
     if (ui.checkForNumberBoxTouched(ampDecay_NumberBox)){
-      myControlChange(1, CCdecay, ampDecay_NumberBox.value);
+      setControlChange(CCdecay, ampDecay_NumberBox.value);
     }
     if (ui.checkForNumberBoxTouched(ampSustain_NumberBox)){
-      myControlChange(1, CCsustain, ampSustain_NumberBox.value);
+      setControlChange(CCsustain, ampSustain_NumberBox.value);
     }
     if (ui.checkForNumberBoxTouched(ampRelease_NumberBox)){
-      myControlChange(1, CCrelease, ampRelease_NumberBox.value);
+      setControlChange(CCrelease, ampRelease_NumberBox.value);
     }
 
     //

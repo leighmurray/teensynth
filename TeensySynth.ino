@@ -19,5 +19,6 @@ void setup ()
 
 void loop ()
 {
+  handleMainEncoder();
   synthLoop();
 }
