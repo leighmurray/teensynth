@@ -5,7 +5,7 @@
 #include "Menu.h"
 #include <TeensyThreads.h>
 //#include "DisplayLib.h"
-
+#include "UsbMidiHost.h"
 
 //DisplayManager displayManager = DisplayManager();
 
@@ -15,10 +15,12 @@ void setup ()
   //displaySetup();
   menuSetup();
   threads.addThread(menuLoop);
+  usbMidiHostSetup();
 }
 
 void loop ()
 {
   handleMainEncoder();
+  usbMidiHostLoop();
   synthLoop();
 }
